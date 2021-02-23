@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vue js and html</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h3>Vue js Crud</h3>
+                <button class="btn" v-on:click="showForm">Add new</button>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <table>
+                        <tr>
+                            <th>SL</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Skill</th>
+                            <th>Action</th>
+                        </tr>
+                        <tr v-for="(user,i) in users">
+                            <td>{{++i}}</td>
+                            <td>{{user.name}}</td>
+                            <td>{{user.email}}</td>
+                            <td>{{user.skill}}</td>
+                            <td>
+                                <button @click="userUpdateModal=true; getUser(user)">edit</button>
+                                <button @click="deleteUserData(user.id)">delete</button>
+                            </td>
+                        </tr>
+
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="modal" v-if="userAddModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 style="margin: 0; float: left">Add new Item</h4>
+                    <h4 style="margin: 0; float: right"><button @click="userAddModal=false;">X</button></h4>
+                </div>
+                <div class="modal-body">
+                    <hr>
+                  <table>
+                      <tr>
+                          <th><label for="">Name</label></th>
+                          <td><input type="text" v-model="form.name"></td>
+                      </tr>
+                      <tr>
+                          <th><label for="">Email</label></th>
+                          <td><input type="text" v-model="form.email"></td>
+                      </tr>
+                      <tr>
+                          <th><label for="">Skill</label></th>
+                          <td><input type="text" v-model="form.skill"></td>
+                      </tr>
+                      <tr>
+                          <td><button @click="userAddModal=false; addNewData()">submit</button></td>
+                      </tr>
+                  </table>
+                </div>
+            </div>
+        </div>
+        <div class="modal" v-if="userUpdateModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 style="margin: 0; float: left" @click="userUpdateModal=false">Update User</h4>
+                    <h4 style="margin: 0; float: right"><button @click="userUpdateModal=false">X</button></h4>
+                </div>
+                <div class="modal-body">
+                    <hr>
+                    <table>
+                        <tr>
+                            <th><label for="">Name</label></th>
+                            <td><input type="text" v-model="getUserData.name"></td>
+                        </tr>
+                        <tr>
+                            <th><label for="">Email</label></th>
+                            <td><input type="text" v-model="getUserData.email"></td>
+                        </tr>
+                        <tr>
+                            <th><label for="">Skill</label></th>
+                            <td><input type="text" v-model="getUserData.skill"></td>
+                        </tr>
+                        <tr>
+                            <td><button @click="userUpdateModal=false;updateUserData()">Update</button></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="js/vue.js"></script>
+<script src="js/axios.min.js"></script>
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            users:[],
+            userAddModal: false,
+            userUpdateModal: false,
+            form:{
+                name: null,
+                email: null,
+                skill: null,
+            },
+            getUserData:{}
+        },
+        methods:{
+            getUsers(){
+             axios.get('http://localhost/api/api.php?action=read')
+                    .then(function (response) {
+                        // console.log(response.data.users)
+                        app.users = response.data.users
+                })
+            },
+            showForm(){
+                app.userAddModal = true
+            },
+            addNewData(){
+                let formData = this.toFormData(this.form);
+                axios.post('http://localhost/api/api.php?action=create',formData)
+                    .then(function (response) {
+                       // console.log("data added");
+                        app.toClearFormData();
+                        app.getUsers()
+                })
+
+            },
+            updateUserData(){
+                let formData = this.toFormData(this.getUserData);
+                axios.post('http://localhost/api/api.php?action=update',formData)
+                    .then(function (response) {
+                        // console.log("data added");
+                        app.toClearFormData();
+                        app.getUsers()
+                    })
+
+            },
+            deleteUserData(id)
+            {
+                let formData = this.toFormData({id:id});
+                axios.post('http://localhost/api/api.php?action=delete',formData)
+                    .then(function (response) {
+                        // console.log("data added");
+                        app.getUsers()
+                    })
+            },
+            getUser(user){
+                this.getUserData = user
+            },
+            toFormData(obj){
+                let data = new FormData;
+                for (let key in obj)
+                {
+                   data.append(key,obj[key])
+                }
+                return data;
+            },
+            toClearFormData(){
+                app.form.name = null
+                app.form.email = null
+                app.form.skill = null
+            },
+
+        },
+       mounted(){
+            this.getUsers()
+       }
+    })
+</script>
+</body>
+</html>
